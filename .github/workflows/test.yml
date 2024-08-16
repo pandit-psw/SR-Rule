@@ -1,0 +1,25 @@
+name: Test PAT Push
+
+on:
+  workflow_dispatch: # Manually triggered
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Make a test commit
+        run: |
+          echo "# Test Commit" >> testfile.md
+          git add testfile.md
+          git commit -m "Test Commit"
+
+      - name: Push changes
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/tst-pandit-pan/SR-Rule.git
+          git push origin main
