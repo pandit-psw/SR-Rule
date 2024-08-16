@@ -29,5 +29,5 @@ jobs:
           git config --global user.email "panditpan1219@gmail.com"
           git add sr_top500_whitelist_ad.conf sr_cnip_ad.conf
           git commit -m "Update Shadowrocket ADBlock rules"
-          git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/tst-pandit-pan/SR-Rule.git
+          git remote set-url origin https://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@github.com/tst-pandit-pan/SR-Rule.git
           git push origin main
