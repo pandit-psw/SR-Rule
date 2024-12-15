@@ -25,13 +25,19 @@ jobs:
       # Step 3: Modify the files
       - name: Update HK_AI_AD.conf
         run: |
-          # Extract lines from sr_ad_only.conf
+          # Ensure HK_AI_AD.conf exists before proceeding
+          if [ ! -f HK_AI_AD.conf ]; then
+            echo "HK_AI_AD.conf is missing! Creating a new one."
+            touch HK_AI_AD.conf
+          fi
+          
+          # Extract lines from sr_ad_only.conf, skipping the first line
           tail -n +2 TMP_Source/sr_ad_only.conf > temp_sr_content.txt
           
-          # Extract HK_AI_AD.conf content before line 53
+          # Extract the first 52 lines of HK_AI_AD.conf
           head -n 52 HK_AI_AD.conf > temp_hk_content.txt
           
-          # Combine content
+          # Combine content (original HK_AI_AD.conf + content from sr_ad_only.conf)
           cat temp_hk_content.txt temp_sr_content.txt > HK_AI_AD.conf
 
       # Step 4: Commit and push changes
