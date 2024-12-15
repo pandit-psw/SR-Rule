@@ -17,14 +17,14 @@ jobs:
       # Step 2: Copy and modify the file
       - name: Copy and modify CN_AD.conf
         run: |
-          # Ensure TMP_Sources/sr_cnip_ad.conf exists
-          if [ ! -f TMP_Sources/sr_cnip_ad.conf ]; then
+          # Ensure TMP_Source/sr_cnip_ad.conf exists
+          if [ ! -f TMP_Source/sr_cnip_ad.conf ]; then
             echo "sr_cnip_ad.conf is missing!"
             exit 1
           fi
           
           # Copy sr_cnip_ad.conf to CN_AD.conf
-          cp TMP_Sources/sr_cnip_ad.conf CN_AD.conf
+          cp TMP_Source/sr_cnip_ad.conf CN_AD.conf
           
           # Replace line 7 with ipv6 = true
           sed -i '7s/.*/ipv6 = true/' CN_AD.conf
