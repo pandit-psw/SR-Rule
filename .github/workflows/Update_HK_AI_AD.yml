@@ -1,35 +1,44 @@
-name: Update HK_AI_AD.conf
+name: Update Config Files
 
 on:
+  # Schedule: Runs daily at 4:30 AM Hong Kong time (UTC+8)
   schedule:
     - cron: '30 20 * * *'
+  # Manual trigger
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
   update-config:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          path: main
-          fetch-depth: 0 # Fetch all history for the branch
+          python-version: "3.x"
 
-      - name: Fetch latest changes
-        if: github.event_name != 'push' # Only run for schedule/manual
-        run: git pull origin main
-
+      # Step 3: Modify the files
       - name: Update HK_AI_AD.conf
         run: |
-          sr_ad_content=$(sed '1d' main/TMP_Sources/sr_ad_only.conf)
-          head -n 52 main/HK_AI_AD.conf > tmp.conf
-          echo "$sr_ad_content" >> tmp.conf
-          mv tmp.conf main/HK_AI_AD.conf
+          # Extract lines from sr_ad_only.conf
+          tail -n +2 TMP_Sources/sr_ad_only.conf > temp_sr_content.txt
+          
+          # Extract HK_AI_AD.conf content before line 53
+          head -n 52 HK_AI_AD.conf > temp_hk_content.txt
+          
+          # Combine content
+          cat temp_hk_content.txt temp_sr_content.txt > HK_AI_AD.conf
 
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "Update HK_AI_AD.conf"
-          file_pattern: main/HK_AI_AD.conf
+      # Step 4: Commit and push changes
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add HK_AI_AD.conf
+          git commit -m "Update HK_AI_AD.conf from sr_ad_only.conf"
+          git push
