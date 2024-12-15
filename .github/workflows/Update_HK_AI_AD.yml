@@ -26,7 +26,7 @@ jobs:
       - name: Update HK_AI_AD.conf
         run: |
           # Extract lines from sr_ad_only.conf
-          tail -n +2 TMP_Sources/sr_ad_only.conf > temp_sr_content.txt
+          tail -n +2 TMP_Source/sr_ad_only.conf > temp_sr_content.txt
           
           # Extract HK_AI_AD.conf content before line 53
           head -n 52 HK_AI_AD.conf > temp_hk_content.txt
