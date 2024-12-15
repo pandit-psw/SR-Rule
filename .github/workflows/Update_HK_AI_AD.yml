@@ -1,0 +1,30 @@
+name: Update HK_AI_AD.conf
+
+on:
+  schedule:
+    - cron: '30 20 * * *'  # 8:30 PM UTC
+  workflow_dispatch:       # Manual trigger
+  push:
+    branches:
+      - main
+
+jobs:
+  update-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: main
+
+      - name: Update HK_AI_AD.conf
+        run: |
+          sr_ad_content=$(sed '1d' main/TMP_Sources/sr_ad_only.conf)
+          head -n 52 main/HK_AI_AD.conf > tmp.conf
+          echo "$sr_ad_content" >> tmp.conf
+          mv tmp.conf main/HK_AI_AD.conf
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update HK_AI_AD.conf"
+          file_pattern: main/HK_AI_AD.conf
