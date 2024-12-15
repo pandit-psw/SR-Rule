@@ -2,7 +2,7 @@ name: Update Config Files
 
 on:
   schedule:
-    - cron: '30 20 * * *' # 4:30 AM Hong Kong Time (UTC+8)
+    - cron: '20 20 * * *' # 4:20 AM Hong Kong Time (UTC+8)
   workflow_dispatch:
 
 jobs:
