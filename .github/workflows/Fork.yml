@@ -2,7 +2,8 @@ name: Update Adblock Rules
 
 on:
   schedule:
-    - cron: '0 20 * * *' # Runs at 8 PM UTC, which is 4 AM CST (Taiwan) during standard time. Adjust for DST if needed.
+    - cron: '0 20 * * *' # Runs at 8 PM UTC (4 AM CST during standard time). Adjust for DST if needed.
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
   update-rules:
@@ -34,6 +35,6 @@ jobs:
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: Forked From Johnshall/Shadowrocket-ADBlock-Rules-Forever
+          commit_message: Manually/Automatically updated adblock rules
           branch: main # Or your branch name
           file_pattern: TMP_Source/* # Only commit files within TMP_Source
