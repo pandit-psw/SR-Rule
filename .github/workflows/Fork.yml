@@ -1,4 +1,4 @@
-name: Update From Johnshall 
+name: Update From Johnshall
 
 on:
   schedule:
@@ -12,8 +12,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Create TMP_Source directory
-        run: mkdir -p TMP_Source
+      - name: Create or Clear TMP_Source directory
+        run: rm -rf TMP_Source && mkdir TMP_Source # This line replaces the existing TMP_Source directory 
 
       - name: Download specific files
         run: |
