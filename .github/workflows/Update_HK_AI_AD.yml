@@ -31,6 +31,12 @@ jobs:
             touch HK_AI_AD.conf
           fi
           
+          # Grab the 3rd line from CN_AD.conf
+          line_3_cn_ad=$(sed -n '3p' CN_AD.conf)
+          
+          # Replace the 3rd line in HK_AI_AD.conf with the line from CN_AD.conf
+          sed -i "3s/.*/$line_3_cn_ad/" HK_AI_AD.conf
+
           # Extract lines from sr_ad_only.conf, skipping the first line
           tail -n +2 TMP_Source/sr_ad_only.conf > temp_sr_content.txt
           
@@ -46,5 +52,5 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add HK_AI_AD.conf
-          git commit -m "Updated HK_AI_AD.conf"
+          git commit -m "Updated HK_AI_AD.conf with line 3 from CN_AD.conf"
           git push
