@@ -38,5 +38,5 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add CN_AD.conf
-          git commit -m "Updated CN_AD.conf"
+          git commit -m "Updated Configs"
           git push

@@ -74,5 +74,5 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add CN_AD.conf TOP500_WHITE_AD.conf PROXYALL_AD.conf
-          git commit -m "Update config files from corresponding source files"
+          git commit -m "Updated Configs"
           git push
