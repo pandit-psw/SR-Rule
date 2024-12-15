@@ -40,8 +40,8 @@ jobs:
           # Extract lines from sr_ad_only.conf, skipping the first line
           tail -n +2 TMP_Source/sr_ad_only.conf > temp_sr_content.txt
           
-          # Extract the first 52 lines of HK_AI_AD.conf
-          head -n 52 HK_AI_AD.conf > temp_hk_content.txt
+          # Extract the first 80 lines of HK_AI_AD.conf
+          head -n 80 HK_AI_AD.conf > temp_hk_content.txt
           
           # Combine content (original HK_AI_AD.conf + content from sr_ad_only.conf)
           cat temp_hk_content.txt temp_sr_content.txt > HK_AI_AD.conf
