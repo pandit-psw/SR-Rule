@@ -35,6 +35,6 @@ jobs:
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: Manually/Automatically updated adblock rules
+          commit_message: Updated From Johnshall
           branch: main # Or your branch name
           file_pattern: TMP_Source/* # Only commit files within TMP_Source
