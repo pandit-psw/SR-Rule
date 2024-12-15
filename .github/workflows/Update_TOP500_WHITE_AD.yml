@@ -1,14 +1,12 @@
 name: Update TOP500_WHITE_AD.conf
 
 on:
-  # Schedule: Runs daily at 4:30 AM Hong Kong time (UTC+8)
   schedule:
-    - cron: '30 20 * * *'
-  # Manual trigger
+    - cron: '30 20 * * *' # 4:30 AM Hong Kong Time (UTC+8)
   workflow_dispatch:
 
 jobs:
-  update-config:
+  update-top500-config:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,29 +14,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
-
-      # Step 3: Modify the files
-      - name: Update HK_AI_AD.conf
+      # Step 2: Copy and modify the file
+      - name: Copy and modify TOP500_WHITE_AD.conf
         run: |
-          # Extract lines from sr_ad_only.conf
-          tail -n +2 TMP_Source/sr_ad_only.conf > temp_sr_content.txt
+          # Ensure TMP_Source/sr_top500_whitelist_ad.conf exists
+          if [ ! -f TMP_Source/sr_top500_whitelist_ad.conf ]; then
+            echo "sr_top500_whitelist_ad.conf is missing!"
+            exit 1
+          fi
           
-          # Extract HK_AI_AD.conf content before line 53
-          head -n 52 HK_AI_AD.conf > temp_hk_content.txt
+          # Copy sr_top500_whitelist_ad.conf to TOP500_WHITE_AD.conf
+          cp TMP_Source/sr_top500_whitelist_ad.conf TOP500_WHITE_AD.conf
           
-          # Combine content
-          cat temp_hk_content.txt temp_sr_content.txt > HK_AI_AD.conf
+          # Replace line 7 with ipv6 = true
+          sed -i '7s/.*/ipv6 = true/' TOP500_WHITE_AD.conf
+          
+          # Replace line 11 with dns-server = 1.1.1.1, 223.5.5.5
+          sed -i '11s/.*/dns-server = 1.1.1.1, 223.5.5.5/' TOP500_WHITE_AD.conf
 
-      # Step 4: Commit and push changes
+      # Step 3: Commit and push changes
       - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add HK_AI_AD.conf
-          git commit -m "Updated TOP500_WHITE_AD.conf"
+          git add TOP500_WHITE_AD.conf
+          git commit -m "Update TOP500_WHITE_AD.conf from sr_top500_whitelist_ad.conf"
           git push
