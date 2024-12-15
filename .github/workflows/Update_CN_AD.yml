@@ -1,4 +1,4 @@
-name: Update HK_AI_AD.conf
+name: Update CN_AD.conf
 
 on:
   # Schedule: Runs daily at 4:30 AM Hong Kong time (UTC+8)
@@ -40,5 +40,5 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add HK_AI_AD.conf
-          git commit -m "Updated HK_AI_AD.conf"
+          git commit -m "Updated CN_AD.conf"
           git push
