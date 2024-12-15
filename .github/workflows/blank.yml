@@ -1,0 +1,78 @@
+name: Update Config Files
+
+on:
+  schedule:
+    - cron: '30 20 * * *' # 4:30 AM Hong Kong Time (UTC+8)
+  workflow_dispatch:
+
+jobs:
+  update-config:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Copy and modify CN_AD.conf
+      - name: Copy and modify CN_AD.conf
+        run: |
+          # Ensure TMP_Source/sr_cnip_ad.conf exists
+          if [ ! -f TMP_Source/sr_cnip_ad.conf ]; then
+            echo "sr_cnip_ad.conf is missing!"
+            exit 1
+          fi
+          
+          # Copy sr_cnip_ad.conf to CN_AD.conf
+          cp TMP_Source/sr_cnip_ad.conf CN_AD.conf
+          
+          # Replace line 7 with ipv6 = true
+          sed -i '7s/.*/ipv6 = true/' CN_AD.conf
+          
+          # Replace line 11 with dns-server = 1.1.1.1, 223.5.5.5
+          sed -i '11s/.*/dns-server = 1.1.1.1, 223.5.5.5/' CN_AD.conf
+
+      # Step 3: Copy and modify TOP500_WHITE_AD.conf
+      - name: Copy and modify TOP500_WHITE_AD.conf
+        run: |
+          # Ensure TMP_Source/sr_top500_whitelist_ad.conf exists
+          if [ ! -f TMP_Source/sr_top500_whitelist_ad.conf ]; then
+            echo "sr_top500_whitelist_ad.conf is missing!"
+            exit 1
+          fi
+          
+          # Copy sr_top500_whitelist_ad.conf to TOP500_WHITE_AD.conf
+          cp TMP_Source/sr_top500_whitelist_ad.conf TOP500_WHITE_AD.conf
+          
+          # Replace line 7 with ipv6 = true
+          sed -i '7s/.*/ipv6 = true/' TOP500_WHITE_AD.conf
+          
+          # Replace line 11 with dns-server = 1.1.1.1, 223.5.5.5
+          sed -i '11s/.*/dns-server = 1.1.1.1, 223.5.5.5/' TOP500_WHITE_AD.conf
+
+      # Step 4: Copy and modify PROXYALL_AD.conf
+      - name: Copy and modify PROXYALL_AD.conf
+        run: |
+          # Ensure TMP_Source/sr_proxy_banad.conf exists
+          if [ ! -f TMP_Source/sr_proxy_banad.conf ]; then
+            echo "sr_proxy_banad.conf is missing!"
+            exit 1
+          fi
+          
+          # Copy sr_proxy_banad.conf to PROXYALL_AD.conf
+          cp TMP_Source/sr_proxy_banad.conf PROXYALL_AD.conf
+          
+          # Replace line 7 with ipv6 = true
+          sed -i '7s/.*/ipv6 = true/' PROXYALL_AD.conf
+          
+          # Replace line 11 with dns-server = 1.1.1.1, 223.5.5.5
+          sed -i '11s/.*/dns-server = 1.1.1.1, 223.5.5.5/' PROXYALL_AD.conf
+
+      # Step 5: Commit and push changes
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add CN_AD.conf TOP500_WHITE_AD.conf PROXYALL_AD.conf
+          git commit -m "Update config files from corresponding source files"
+          git push
