@@ -1,0 +1,39 @@
+name: Update Adblock Rules
+
+on:
+  schedule:
+    - cron: '0 20 * * *' # Runs at 8 PM UTC, which is 4 AM CST (Taiwan) during standard time. Adjust for DST if needed.
+
+jobs:
+  update-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create TMP_Source directory
+        run: mkdir -p TMP_Source
+
+      - name: Download specific files
+        run: |
+          # Define the files you want to download with spaces.
+          files_to_download=(
+            "https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/refs/heads/release/sr_top500_whitelist_ad.conf"
+            "https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/refs/heads/release/sr_cnip_ad.conf"
+            "https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/refs/heads/release/sr_ad_only.conf"
+            "https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/refs/heads/release/sr_proxy_banad.conf"
+          )
+
+          # Loop through the files and download them using curl
+          for file in "${files_to_download[@]}"; do
+            filename=$(basename "$file") # Extract filename from URL
+            echo "Downloading $file to TMP_Source/$filename..."
+            curl -sSL "$file" -o "TMP_Source/$filename"
+          done
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Forked From Johnshall/Shadowrocket-ADBlock-Rules-Forever
+          branch: main # Or your branch name
+          file_pattern: TMP_Source/* # Only commit files within TMP_Source
