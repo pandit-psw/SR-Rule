@@ -71,8 +71,8 @@ jobs:
       # Step 5: Commit and push changes
       - name: Commit and push changes
         run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
+          git config user.name "Pandit"
+          git config user.email "pandit@panditpan.tk"
           git add CN_AD.conf TOP500_WHITE_AD.conf PROXYALL_AD.conf
           git commit -m "Updated Configs"
           git push
