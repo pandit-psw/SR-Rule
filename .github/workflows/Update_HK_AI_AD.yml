@@ -2,50 +2,54 @@ name: Update HK_AI_AD.conf
 
 on:
   # 設定為 UTC 0:30 (香港時間早上 8:30)
-  # 確保它在另一個 Action (8:15) 下載完 Johnshall 新規則後才執行
+  # 確保它在另一個下載 Johnshall 規則的 Action (8:15) 完成後才執行
   schedule:
     - cron: '30 0 * * *'
   # 允許手動觸發
   workflow_dispatch:
-
 
 jobs:
   update-config:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: 取得儲存庫程式碼
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # 升級至 v4
 
-      # Step 2: 動態生成 HK_AI_AD.conf
       - name: Generate HK_AI_AD.conf
         run: |
-          # 獲取 CN_AD.conf 的第 3 行 (通常是更新時間或版本號)
+          # 獲取 CN_AD.conf 的第 3 行 (更新時間)
           if [ -f CN_AD.conf ]; then
             line_3_cn_ad=$(sed -n '3p' CN_AD.conf)
           else
             line_3_cn_ad="# Update Time: $(date '+%Y-%m-%d %H:%M:%S')"
           fi
           
-          # 將標頭、AI 規則與 TikTok 規則寫入 HK_AI_AD.conf
+          # 將標頭 (含您的專屬 DNS 與 IPv6 偏好)、AI 規則與 TikTok 規則寫入 HK_AI_AD.conf
           cat <<EOF > HK_AI_AD.conf
           [General]
           $line_3_cn_ad
+          ipv6 = true
+          dns-server = 1.1.1.1, 8.8.8.8
           
           [Rule]
           # === 1. AI 服務走代理 (PROXY) ===
-          # OpenAI / ChatGPT
+          
+          # OpenAI / ChatGPT (含 iOS App 登入防護網域)
           DOMAIN-SUFFIX,openai.com,PROXY
           DOMAIN-SUFFIX,chatgpt.com,PROXY
           DOMAIN-SUFFIX,oaistatic.com,PROXY
           DOMAIN-SUFFIX,oaiusercontent.com,PROXY
+          DOMAIN-SUFFIX,auth0.com,PROXY
+          DOMAIN-SUFFIX,statsigapi.net,PROXY
+          DOMAIN-SUFFIX,arkoselabs.com,PROXY
+          DOMAIN-SUFFIX,featuregates.org,PROXY
           
           # Anthropic / Claude
           DOMAIN-SUFFIX,anthropic.com,PROXY
           DOMAIN-SUFFIX,claude.ai,PROXY
           
-          # Google AI (Gemini, NotebookLM 完整版)
+          # Google AI (Gemini, NotebookLM 完整版，包含隱藏 API)
           DOMAIN-KEYWORD,notebooklm,PROXY
           DOMAIN-SUFFIX,notebooklm.google.com,PROXY
           DOMAIN-SUFFIX,notebooklm.google,PROXY
@@ -58,16 +62,20 @@ jobs:
           DOMAIN-SUFFIX,ai.google.dev,PROXY
           DOMAIN-SUFFIX,aistudio.google.com,PROXY
           DOMAIN-SUFFIX,alkali.generativelanguage.googleapis.com,PROXY
+          DOMAIN-SUFFIX,app-measurement.com,PROXY
+          DOMAIN-SUFFIX,firebaseio.com,PROXY
+          DOMAIN-SUFFIX,crashlytics.com,PROXY
           
-          # Apple Intelligence (如有特定需要代理的網域可在此擴充)
+          # Apple Intelligence
           DOMAIN-SUFFIX,mathsolver.apple.com,PROXY
+          DOMAIN-SUFFIX,apple-ai.icloud.com,PROXY
           
           # 其他常見 AI
           DOMAIN-SUFFIX,perplexity.ai,PROXY
           DOMAIN-SUFFIX,poe.com,PROXY
           DOMAIN-SUFFIX,midjourney.com,PROXY
           
-          # === 2. TikTok 走代理 (根據 Repo 說明) ===
+          # === 2. TikTok 走代理 ===
           DOMAIN-SUFFIX,tiktokv.com,PROXY
           DOMAIN-SUFFIX,tiktok.com,PROXY
           DOMAIN-SUFFIX,byteoversea.com,PROXY
@@ -92,13 +100,11 @@ jobs:
           FINAL,DIRECT
           EOF
 
-      # Step 3: 提交並推送更改
       - name: Commit and push changes
         run: |
           git config user.name "Pandit"
           git config user.email "pandit@panditpan.tk"
           git add HK_AI_AD.conf
           
-          # 檢查是否有變更，若有變更才 commit，避免 GitHub Action 報錯
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-updated HK_AI_AD.conf with AI, TikTok rules and Adblock" && git push)
-
+          # 檢查是否有變更，若有變更才 commit，避免 GitHub Action 報錯 (Exit Code 1)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-updated HK_AI_AD.conf with AI, IPv6, HK DNS and Adblock" && git push)
