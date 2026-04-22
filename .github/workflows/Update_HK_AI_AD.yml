@@ -1,10 +1,10 @@
 name: Update HK_AI_AD.conf
 
 on:
-  # Schedule: Runs daily at 4:30 AM Hong Kong time (UTC+8)
+  # 每天香港時間凌晨 4:30 執行 (UTC+8)
   schedule:
     - cron: '30 20 * * *'
-  # Manual trigger
+  # 允許手動觸發
   workflow_dispatch:
 
 jobs:
@@ -12,45 +12,85 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
+      # Step 1: 取得儲存庫程式碼
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
-
-      # Step 3: Modify the files
-      - name: Update HK_AI_AD.conf
+      # Step 2: 動態生成 HK_AI_AD.conf
+      - name: Generate HK_AI_AD.conf
         run: |
-          # Ensure HK_AI_AD.conf exists before proceeding
-          if [ ! -f HK_AI_AD.conf ]; then
-            echo "HK_AI_AD.conf is missing! Creating a new one."
-            touch HK_AI_AD.conf
+          # 獲取 CN_AD.conf 的第 3 行 (通常是更新時間或版本號)
+          if [ -f CN_AD.conf ]; then
+            line_3_cn_ad=$(sed -n '3p' CN_AD.conf)
+          else
+            line_3_cn_ad="# Update Time: $(date '+%Y-%m-%d %H:%M:%S')"
           fi
           
-          # Grab the 3rd line from CN_AD.conf
-          line_3_cn_ad=$(sed -n '3p' CN_AD.conf)
+          # 將標頭、AI 規則與 TikTok 規則寫入 HK_AI_AD.conf
+          # 這裡取代了原本的 head -n 80，直接將您需要的網域寫死在腳本裡，日後維護更方便
+          cat <<EOF > HK_AI_AD.conf
+          [General]
+          $line_3_cn_ad
           
-          # Replace the 3rd line in HK_AI_AD.conf with the line from CN_AD.conf
-          sed -i "3s/.*/$line_3_cn_ad/" HK_AI_AD.conf
+          [Rule]
+          # === 1. AI 服務走代理 (PROXY) ===
+          # OpenAI / ChatGPT
+          DOMAIN-SUFFIX,openai.com,PROXY
+          DOMAIN-SUFFIX,chatgpt.com,PROXY
+          DOMAIN-SUFFIX,oaistatic.com,PROXY
+          DOMAIN-SUFFIX,oaiusercontent.com,PROXY
+          
+          # Anthropic / Claude
+          DOMAIN-SUFFIX,anthropic.com,PROXY
+          DOMAIN-SUFFIX,claude.ai,PROXY
+          
+          # Google AI (Gemini, NotebookLM)
+          DOMAIN-SUFFIX,gemini.google.com,PROXY
+          DOMAIN-SUFFIX,notebooklm.google.com,PROXY
+          DOMAIN-SUFFIX,generativelanguage.googleapis.com,PROXY
+          DOMAIN-SUFFIX,ai.google.dev,PROXY
+          DOMAIN-SUFFIX,aistudio.google.com,PROXY
+          
+          # Apple Intelligence (如有特定需要代理的網域可在此擴充)
+          DOMAIN-SUFFIX,mathsolver.apple.com,PROXY
+          
+          # 其他常見 AI
+          DOMAIN-SUFFIX,perplexity.ai,PROXY
+          DOMAIN-SUFFIX,poe.com,PROXY
+          DOMAIN-SUFFIX,midjourney.com,PROXY
+          
+          # === 2. TikTok 走代理 (根據 Repo 說明) ===
+          DOMAIN-SUFFIX,tiktokv.com,PROXY
+          DOMAIN-SUFFIX,tiktok.com,PROXY
+          DOMAIN-SUFFIX,byteoversea.com,PROXY
+          DOMAIN-SUFFIX,ibytedtos.com,PROXY
+          DOMAIN-SUFFIX,muscdn.com,PROXY
+          DOMAIN-KEYWORD,tiktokcdn,PROXY
+          
+          # === 3. 去廣告規則 (來自 Johnshall) ===
+          EOF
 
-          # Extract lines from sr_ad_only.conf, skipping the first line
-          tail -n +2 TMP_Source/sr_ad_only.conf > temp_sr_content.txt
+          # 將 sr_ad_only.conf 的內容附加到下方 (跳過第一行避免與 [Rule] 標籤重複)
+          if [ -f TMP_Source/sr_ad_only.conf ]; then
+            tail -n +2 TMP_Source/sr_ad_only.conf >> HK_AI_AD.conf
+          else
+            echo "Warning: TMP_Source/sr_ad_only.conf not found!"
+          fi
           
-          # Extract the first 80 lines of HK_AI_AD.conf
-          head -n 80 HK_AI_AD.conf > temp_hk_content.txt
+          # === 4. 其餘流量全局直連 (DIRECT) ===
+          cat <<EOF >> HK_AI_AD.conf
           
-          # Combine content (original HK_AI_AD.conf + content from sr_ad_only.conf)
-          cat temp_hk_content.txt temp_sr_content.txt > HK_AI_AD.conf
+          # === 結尾：其餘流量直連 ===
+          FINAL,DIRECT
+          EOF
 
-      # Step 4: Commit and push changes
+      # Step 3: 提交並推送更改
       - name: Commit and push changes
         run: |
           git config user.name "Pandit"
           git config user.email "pandit@panditpan.tk"
           git add HK_AI_AD.conf
-          git commit -m "Updated HK_AI_AD.conf with line 3 from CN_AD.conf"
-          git push
+          
+          # 檢查是否有變更，若有變更才 commit，避免 GitHub Action 報錯
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-updated HK_AI_AD.conf with AI, TikTok rules and Adblock" && git push)
+          
