@@ -1,11 +1,13 @@
 name: Update HK_AI_AD.conf
 
 on:
-  # 每天香港時間凌晨 4:30 執行 (UTC+8)
+  # 設定為 UTC 0:30 (香港時間早上 8:30)
+  # 確保它在另一個 Action (8:15) 下載完 Johnshall 新規則後才執行
   schedule:
-    - cron: '30 20 * * *'
+    - cron: '30 0 * * *'
   # 允許手動觸發
   workflow_dispatch:
+
 
 jobs:
   update-config:
