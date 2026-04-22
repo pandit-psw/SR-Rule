@@ -1,4 +1,4 @@
-name: Update From Configs
+name: Fork From Johnshall
 
 on:
   # 最佳化 1：配合上游 Johnshall 每日北京/香港時間 8:00 更新
