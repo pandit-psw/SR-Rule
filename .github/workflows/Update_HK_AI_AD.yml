@@ -27,7 +27,6 @@ jobs:
           fi
           
           # 將標頭、AI 規則與 TikTok 規則寫入 HK_AI_AD.conf
-          # 這裡取代了原本的 head -n 80，直接將您需要的網域寫死在腳本裡，日後維護更方便
           cat <<EOF > HK_AI_AD.conf
           [General]
           $line_3_cn_ad
@@ -44,12 +43,18 @@ jobs:
           DOMAIN-SUFFIX,anthropic.com,PROXY
           DOMAIN-SUFFIX,claude.ai,PROXY
           
-          # Google AI (Gemini, NotebookLM)
-          DOMAIN-SUFFIX,gemini.google.com,PROXY
+          # Google AI (Gemini, NotebookLM 完整版)
+          DOMAIN-KEYWORD,notebooklm,PROXY
           DOMAIN-SUFFIX,notebooklm.google.com,PROXY
+          DOMAIN-SUFFIX,notebooklm.google,PROXY
+          DOMAIN-SUFFIX,notebooklm.usercontent.google.com,PROXY
+          DOMAIN-SUFFIX,gemini.google.com,PROXY
+          DOMAIN-SUFFIX,generativeai.google,PROXY
           DOMAIN-SUFFIX,generativelanguage.googleapis.com,PROXY
+          DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com,PROXY
           DOMAIN-SUFFIX,ai.google.dev,PROXY
           DOMAIN-SUFFIX,aistudio.google.com,PROXY
+          DOMAIN-SUFFIX,alkali.generativelanguage.googleapis.com,PROXY
           
           # Apple Intelligence (如有特定需要代理的網域可在此擴充)
           DOMAIN-SUFFIX,mathsolver.apple.com,PROXY
@@ -93,4 +98,4 @@ jobs:
           
           # 檢查是否有變更，若有變更才 commit，避免 GitHub Action 報錯
           git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-updated HK_AI_AD.conf with AI, TikTok rules and Adblock" && git push)
-          
+
