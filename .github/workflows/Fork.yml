@@ -8,12 +8,18 @@ on:
   # 允許手動觸發
   workflow_dispatch: 
 
+
 jobs:
-  update-rules:
+  update-rules: # 或 update-rules
     runs-on: ubuntu-latest
+    
+    # 加上這一段環境變數，強制 Actions 使用 Node.js 24 來消除警告
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4 # 升級至 v4 提升效能
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       # (可選) 如果您有從 TMP_Source 下載檔案的需求，可保留這段最佳化過的下載腳本
       - name: Create or Clear TMP_Source directory
