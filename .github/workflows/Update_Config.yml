@@ -1,8 +1,10 @@
 name: Update Config Files
 
 on:
+  # 最佳化 1：修改執行時間！
+  # 設定為 UTC 0:25 (香港時間早上 8:25)，確保它在您的 "Update From Johnshall" (8:15) 下載完新規則後才執行
   schedule:
-    - cron: '20 20 * * *' # 4:20 AM Hong Kong Time (UTC+8)
+    - cron: '25 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,69 +12,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # 最佳化 2：升級至 v4
 
-      # Step 2: Copy and modify CN_AD.conf
-      - name: Copy and modify CN_AD.conf
+      # 最佳化 3 & 4：使用迴圈合併重複步驟，並採用正則表達式取代固定行數
+      - name: Copy and apply personal preferences
         run: |
-          # Ensure TMP_Source/sr_cnip_ad.conf exists
-          if [ ! -f TMP_Source/sr_cnip_ad.conf ]; then
-            echo "sr_cnip_ad.conf is missing!"
-            exit 1
-          fi
+          # 建立一個關聯陣列 (Dictionary)，對應來源檔案與目標檔案
+          declare -A configs=(
+            ["TMP_Source/sr_cnip_ad.conf"]="CN_AD.conf"
+            ["TMP_Source/sr_top500_whitelist_ad.conf"]="TOP500_WHITE_AD.conf"
+            ["TMP_Source/sr_proxy_banad.conf"]="PROXYALL_AD.conf"
+          )
           
-          # Copy sr_cnip_ad.conf to CN_AD.conf
-          cp TMP_Source/sr_cnip_ad.conf CN_AD.conf
-          
-          # Replace line 7 with ipv6 = true
-          sed -i '7s/.*/ipv6 = true/' CN_AD.conf
-          
-          # Replace line 11 with dns-server = 1.1.1.1, 223.5.5.5
-          sed -i '11s/.*/dns-server = 1.1.1.1, 223.5.5.5/' CN_AD.conf
+          # 遍歷陣列進行處理
+          for src in "${!configs[@]}"; do
+            dest="${configs[$src]}"
+            
+            # 確保來源檔案存在
+            if [ ! -f "$src" ]; then
+              echo "Error: $src is missing!"
+              exit 1
+            fi
+            
+            echo "Processing $dest..."
+            cp "$src" "$dest"
+            
+            # 【關鍵最佳化】：使用正則表達式取代固定的第 7 行與第 11 行
+            # 這樣即使 Johnshall 未來在檔案頂部加了註解導致行數偏移，也能精準替換！
+            sed -i 's/^ipv6 =.*/ipv6 = true/' "$dest"
+            sed -i 's/^dns-server =.*/dns-server = 1.1.1.1, 223.5.5.5/' "$dest"
+          done
 
-      # Step 3: Copy and modify TOP500_WHITE_AD.conf
-      - name: Copy and modify TOP500_WHITE_AD.conf
-        run: |
-          # Ensure TMP_Source/sr_top500_whitelist_ad.conf exists
-          if [ ! -f TMP_Source/sr_top500_whitelist_ad.conf ]; then
-            echo "sr_top500_whitelist_ad.conf is missing!"
-            exit 1
-          fi
-          
-          # Copy sr_top500_whitelist_ad.conf to TOP500_WHITE_AD.conf
-          cp TMP_Source/sr_top500_whitelist_ad.conf TOP500_WHITE_AD.conf
-          
-          # Replace line 7 with ipv6 = true
-          sed -i '7s/.*/ipv6 = true/' TOP500_WHITE_AD.conf
-          
-          # Replace line 11 with dns-server = 1.1.1.1, 223.5.5.5
-          sed -i '11s/.*/dns-server = 1.1.1.1, 223.5.5.5/' TOP500_WHITE_AD.conf
-
-      # Step 4: Copy and modify PROXYALL_AD.conf
-      - name: Copy and modify PROXYALL_AD.conf
-        run: |
-          # Ensure TMP_Source/sr_proxy_banad.conf exists
-          if [ ! -f TMP_Source/sr_proxy_banad.conf ]; then
-            echo "sr_proxy_banad.conf is missing!"
-            exit 1
-          fi
-          
-          # Copy sr_proxy_banad.conf to PROXYALL_AD.conf
-          cp TMP_Source/sr_proxy_banad.conf PROXYALL_AD.conf
-          
-          # Replace line 7 with ipv6 = true
-          sed -i '7s/.*/ipv6 = true/' PROXYALL_AD.conf
-          
-          # Replace line 11 with dns-server = 1.1.1.1, 223.5.5.5
-          sed -i '11s/.*/dns-server = 1.1.1.1, 223.5.5.5/' PROXYALL_AD.conf
-
-      # Step 5: Commit and push changes
+      # 最佳化 5：加入我們先前學到的防呆機制，避免 exit code 1
       - name: Commit and push changes
         run: |
           git config user.name "Pandit"
           git config user.email "pandit@panditpan.tk"
           git add CN_AD.conf TOP500_WHITE_AD.conf PROXYALL_AD.conf
-          git commit -m "Updated Configs"
-          git push
+          
+          # 檢查是否有變更，有變更才 commit 與 push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Updated Configs with personal preferences" && git push)
