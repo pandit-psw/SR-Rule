@@ -12,6 +12,10 @@ jobs:
   update-config:
     runs-on: ubuntu-latest
 
+    # 加上這一段環境變數，強制 Actions 使用 Node.js 24 來消除警告
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4 # 升級至 v4
