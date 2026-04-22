@@ -1,18 +1,21 @@
-name: Update From Johnshall
+name: Update Configs
 
 on:
-  # 最佳化 1：配合上游更新時間。設定為 UTC 0:15（香港時間早上 8:15），確保拉取到當日最新釋出的規則
+  # 最佳化 1：配合上游 Johnshall 每日北京/香港時間 8:00 更新
+  # 設定為 UTC 0:15（即香港時間早上 8:15）抓取，確保拿到最新規則
   schedule:
     - cron: '15 0 * * *'
-  workflow_dispatch:
+  # 允許手動觸發
+  workflow_dispatch: 
 
 jobs:
   update-rules:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # 升級至 v4 提升效能與 Node.js 相容性
+        uses: actions/checkout@v4 # 升級至 v4 提升效能
 
+      # (可選) 如果您有從 TMP_Source 下載檔案的需求，可保留這段最佳化過的下載腳本
       - name: Create or Clear TMP_Source directory
         run: |
           rm -rf TMP_Source
@@ -22,7 +25,6 @@ jobs:
         run: |
           cd TMP_Source
           
-          # 最佳化 2：將 URL 集中管理
           urls=(
             "https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/refs/heads/release/sr_top500_whitelist_ad.conf"
             "https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/refs/heads/release/sr_cnip_ad.conf"
@@ -30,9 +32,8 @@ jobs:
             "https://raw.githubusercontent.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/refs/heads/release/sr_proxy_banad.conf"
           )
 
-          # 最佳化 3：並行下載 (Parallel Downloads) 與防呆機制
+          # 最佳化 2：並行下載 (Parallel Downloads) 與防呆機制 (-f 防止下載到 404 網頁)
           for url in "${urls[@]}"; do
-            # 使用 -f 避免下載到 404 錯誤網頁，-O 自動解析檔名，& 丟到背景同時下載
             curl -sSLfO "$url" &
           done
           
@@ -40,9 +41,17 @@ jobs:
           wait
           echo "All files downloaded successfully."
 
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5 # 升級至 v5
-        with:
-          commit_message: "Auto-updated latest rules from Johnshall"
-          branch: main
-          file_pattern: TMP_Source/*
+      # =========================================
+      # 最佳化 3：手動提交與推播 (加入防報錯機制)
+      # =========================================
+      - name: Commit and push changes
+        run: |
+          git config user.name "Pandit"
+          git config user.email "pandit@panditpan.tk"
+          
+          # 將您指定的根目錄設定檔（以及可能更新的 TMP_Source）加入暫存區
+          git add CN_AD.conf TOP500_WHITE_AD.conf PROXYALL_AD.conf TMP_Source/*
+          
+          # 【關鍵修復】：檢查是否有變更，有變更才 commit 與 push！
+          # 這樣當某天來源規則完全沒變動時，Action 也會顯示綠燈成功，不會再跳 exit code 1 了。
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Updated Configs" && git push)
