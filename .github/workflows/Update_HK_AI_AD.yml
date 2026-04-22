@@ -48,6 +48,7 @@ jobs:
           DOMAIN-SUFFIX,notebooklm.google.com,PROXY
           DOMAIN-SUFFIX,notebooklm.google,PROXY
           DOMAIN-SUFFIX,notebooklm.usercontent.google.com,PROXY
+          DOMAIN-SUFFIX,notebooklm-pa.googleapis.com,PROXY
           DOMAIN-SUFFIX,gemini.google.com,PROXY
           DOMAIN-SUFFIX,generativeai.google,PROXY
           DOMAIN-SUFFIX,generativelanguage.googleapis.com,PROXY
