@@ -74,18 +74,24 @@ jobs:
             sed -i 's/^ipv6 =.*/ipv6 = true/' "$dest"
             sed -i 's/^dns-server =.*/dns-server = 1.1.1.1, 223.5.5.5/' "$dest"
             
-            # 2. 注入 Apple 規則 (移除右括號的轉義斜線，並加上空格)
-            sed -i '/^\[Rule]/ r apple_rules.txt' "$dest"
+            # 2. 注入 Apple 規則 (防呆機制：使用 grep 抓取行號，避開 sed 符號解析錯誤)
+            RULE_LINE=$(grep -n -m 1 "^\[Rule\]" "$dest" | cut -d: -f1)
+            if [ -n "$RULE_LINE" ]; then
+              sed -i "${RULE_LINE}r apple_rules.txt" "$dest"
+            fi
             
-            # 3. 注入 Google URL Rewrite 規則 (移除右括號的轉義斜線，並加上空格)
-            sed -i '/^\https://ahrefs.com/writing-tools/paragraph-rewriter/ r google_rewrite.txt' "$dest"
+            # 3. 注入 Google URL Rewrite 規則 (防呆機制)
+            REWRITE_LINE=$(grep -n -m 1 "^\https://ahrefs.com/writing-tools/paragraph-rewriter" "$dest" | cut -d: -f1)
+            if [ -n "$REWRITE_LINE" ]; then
+              sed -i "${REWRITE_LINE}r google_rewrite.txt" "$dest"
+            fi
             
             # 4. 處理 MITM，將 Google 的 HK 與 CN 網域附加到現有的 hostname 列表最後面
             sed -i 's/^hostname =.*/&, *.google.com.hk, *.google.cn/' "$dest"
             
           done
 
-      # 最佳化 5：加入我們先前學到的防呆機制，避免 exit code 1
+      # 最佳化 5：檢查並提交
       - name: Commit and push changes
         run: |
           git config user.name "Pandit"
