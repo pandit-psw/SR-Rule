@@ -74,14 +74,13 @@ jobs:
             sed -i 's/^ipv6 =.*/ipv6 = true/' "$dest"
             sed -i 's/^dns-server =.*/dns-server = 1.1.1.1, 223.5.5.5/' "$dest"
             
-            # 2. 注入 Apple 規則 (在 [Rule] 標籤的正下方插入 apple_rules.txt 的內容)
-            sed -i '/^\[Rule\]/r apple_rules.txt' "$dest"
+            # 2. 注入 Apple 規則 (移除右括號的轉義斜線，並加上空格)
+            sed -i '/^\[Rule]/ r apple_rules.txt' "$dest"
             
-            # 3. 注入 Google URL Rewrite 規則 (在 https://ahrefs.com/writing-tools/paragraph-rewriter 標籤的正下方插入)
-            sed -i '/^\https://ahrefs.com/writing-tools/paragraph-rewriter/r google_rewrite.txt' "$dest"
+            # 3. 注入 Google URL Rewrite 規則 (移除右括號的轉義斜線，並加上空格)
+            sed -i '/^\https://ahrefs.com/writing-tools/paragraph-rewriter/ r google_rewrite.txt' "$dest"
             
             # 4. 處理 MITM，將 Google 的 HK 與 CN 網域附加到現有的 hostname 列表最後面
-            # & 代表保留原本找到的字串，並在後面加上逗號與新網域
             sed -i 's/^hostname =.*/&, *.google.com.hk, *.google.cn/' "$dest"
             
           done
