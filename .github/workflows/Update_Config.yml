@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-config: # 或 update-rules
+  update-config:
     runs-on: ubuntu-latest
     
     # 加上這一段環境變數，強制 Actions 使用 Node.js 24 來消除警告
@@ -22,29 +22,33 @@ jobs:
       # 新增步驟：建立自訂規則片段，供稍後注入使用
       - name: Create custom rule fragments
         run: |
-          cat << 'EOF' > apple_rules.txt
-          # --- Custom Apple Rules (News Proxy + App Store Direct) ---
-          DOMAIN,news-client.apple.com,PROXY
-          DOMAIN,news-edge.apple.com,PROXY
-          DOMAIN,news-events.apple.com,PROXY
-          DOMAIN,apple.comscoreresearch.com,PROXY
-          DOMAIN-SUFFIX,apple.news,PROXY
-          DOMAIN-SUFFIX,apple.com,DIRECT
-          DOMAIN-SUFFIX,appstore.com,DIRECT
+          cat << 'EOF' > custom_top_rules.txt
+          # === 1. LAN, Continuity & FaceTime (Must be DIRECT) ===
+          IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+          IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+          IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+          DOMAIN-SUFFIX,push.apple.com,DIRECT
+          DOMAIN-SUFFIX,ess.apple.com,DIRECT
+          DOMAIN-SUFFIX,facetime.apple.com,DIRECT
+          
+          # === 2. Xiaohongshu / Rednote (Must be DIRECT) ===
+          DOMAIN-SUFFIX,xiaohongshu.com,DIRECT
+          DOMAIN-SUFFIX,xhscdn.com,DIRECT
+          DOMAIN-SUFFIX,xhscdn.net,DIRECT
+          DOMAIN-SUFFIX,edith.re,DIRECT
+          
+          # === 3. App Store & Apple Services (Must be DIRECT) ===
+          DOMAIN-SUFFIX,itunes.apple.com,DIRECT
+          DOMAIN-SUFFIX,apps.apple.com,DIRECT
+          DOMAIN,iosapps.itunes.apple.com,DIRECT
           DOMAIN-SUFFIX,mzstatic.com,DIRECT
+          DOMAIN-SUFFIX,aaplimg.com,DIRECT
+          DOMAIN-SUFFIX,cdn-apple.com,DIRECT
+          DOMAIN-SUFFIX,apple.com,DIRECT
           DOMAIN-SUFFIX,icloud.com,DIRECT
           DOMAIN-SUFFIX,icloud-content.com,DIRECT
           DOMAIN-SUFFIX,me.com,DIRECT
-          DOMAIN-SUFFIX,aaplimg.com,DIRECT
-          DOMAIN-SUFFIX,cdn-apple.com,DIRECT
-          # --------------------------------------------------------
-          EOF
-
-          cat << 'EOF' > google_rewrite.txt
-          # --- Redirect regional Google to pure Google.com ---
-          ^https?:\/\/(www\.)?google\.com\.hk https://www.google.com 302
-          ^https?:\/\/(www\.)?google\.cn https://www.google.com 302
-          # ---------------------------------------------------
+          # ===============================================
           EOF
 
       # 最佳化 3 & 4：使用迴圈合併重複步驟，並採用正則表達式取代固定行數
@@ -74,20 +78,11 @@ jobs:
             sed -i 's/^ipv6 =.*/ipv6 = true/' "$dest"
             sed -i 's/^dns-server =.*/dns-server = 1.1.1.1, 223.5.5.5/' "$dest"
             
-            # 2. 注入 Apple 規則 (防呆機制：使用 grep 抓取行號，避開 sed 符號解析錯誤)
+            # 2. 注入所有頂層自訂規則 (防呆機制：使用 grep 抓取行號，避開 sed 符號解析錯誤)
             RULE_LINE=$(grep -n -m 1 "^\[Rule\]" "$dest" | cut -d: -f1)
             if [ -n "$RULE_LINE" ]; then
-              sed -i "${RULE_LINE}r apple_rules.txt" "$dest"
+              sed -i "${RULE_LINE}r custom_top_rules.txt" "$dest"
             fi
-            
-            # 3. 注入 Google URL Rewrite 規則 (防呆機制)
-            REWRITE_LINE=$(grep -n -m 1 "^\https://ahrefs.com/writing-tools/paragraph-rewriter" "$dest" | cut -d: -f1)
-            if [ -n "$REWRITE_LINE" ]; then
-              sed -i "${REWRITE_LINE}r google_rewrite.txt" "$dest"
-            fi
-            
-            # 4. 處理 MITM，將 Google 的 HK 與 CN 網域附加到現有的 hostname 列表最後面
-            sed -i 's/^hostname =.*/&, *.google.com.hk, *.google.cn/' "$dest"
             
           done
 
@@ -99,4 +94,4 @@ jobs:
           git add CN_AD.conf TOP500_WHITE_AD.conf PROXYALL_AD.conf
           
           # 檢查是否有變更，有變更才 commit 與 push
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Updated Configs with personal preferences, Apple & Google fixes" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Updated Configs with personal preferences, Apple & XHS fixes" && git push)
